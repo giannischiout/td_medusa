@@ -1,0 +1,131 @@
+### Product Scheduler API Tests
+### Base URL: http://localhost:9000
+
+### 1. Create a Product Rule
+POST http://localhost:9000/admin/product-rule
+Content-Type: application/json
+
+{
+  "product_id": "prod_01K7Y3FNEP4VZAA9GKSDYCEQ9Z",
+  "rule_name": "Morning Schedule"
+}
+
+### 2. Create Time Slots for the Rule
+POST http://localhost:9000/admin/time-slots
+Content-Type: application/json
+
+{
+  "rule_id": "rule_123",
+  "product_id": "prod_01K7Y3FNEP4VZAA9GKSDYCEQ9Z",
+  "time_slots": [
+    {
+      "start_time": "09:00",
+      "end_time": "12:00",
+      "capacity": 10
+    },
+    {
+      "start_time": "14:00",
+      "end_time": "17:00",
+      "capacity": 5
+    },
+    {
+      "start_time": "18:00",
+      "end_time": "21:00",
+      "capacity": 8
+    }
+  ]
+}
+
+### 3. Update a Time Slot
+PUT http://localhost:9000/admin/time-slots/time_slot_123
+Content-Type: application/json
+
+{
+  "start_time": "10:00",
+  "end_time": "13:00",
+  "capacity": 15
+}
+
+### 4. Delete a Time Slot
+DELETE http://localhost:9000/admin/time-slots/time_slot_123
+
+### 5. Create Another Rule for Different Product
+POST http://localhost:9000/admin/product-rule
+Content-Type: application/json
+
+{
+  "product_id": "prod_01K7Y3FNEP4VZAA9GKSDYCEQ9Z",
+  "rule_name": "Evening Schedule"
+}
+
+### 6. Create Time Slots for Evening Rule
+POST http://localhost:9000/admin/time-slots
+Content-Type: application/json
+
+{
+  "rule_id": "rule_456",
+  "product_id": "prod_01K7Y3FNEP4VZAA9GKSDYCEQ9Z",
+  "time_slots": [
+    {
+      "start_time": "19:00",
+      "end_time": "22:00",
+      "capacity": 12
+    },
+    {
+      "start_time": "22:00",
+      "end_time": "01:00",
+      "capacity": 6
+    }
+  ]
+}
+
+### 7. Update Evening Time Slot
+PUT http://localhost:9000/admin/time-slots/time_slot_456
+Content-Type: application/json
+
+{
+  "capacity": 20
+}
+
+### 8. Create Weekend Special Rule
+POST http://localhost:9000/admin/product-rule
+Content-Type: application/json
+
+{
+  "product_id": "prod_01K7Y3FNEP4VZAA9GKSDYCEQ9Z",
+  "rule_name": "Weekend Special"
+}
+
+### 9. Create Weekend Time Slots
+POST http://localhost:9000/admin/time-slots
+Content-Type: application/json
+
+{
+  "rule_id": "rule_789",
+  "product_id": "prod_01K7Y3FNEP4VZAA9GKSDYCEQ9Z",
+  "time_slots": [
+    {
+      "start_time": "08:00",
+      "end_time": "11:00",
+      "capacity": 25
+    },
+    {
+      "start_time": "11:00",
+      "end_time": "14:00",
+      "capacity": 30
+    },
+    {
+      "start_time": "14:00",
+      "end_time": "17:00",
+      "capacity": 20
+    },
+    {
+      "start_time": "17:00",
+      "end_time": "20:00",
+      "capacity": 15
+    }
+  ]
+}
+
+### 10. Delete Weekend Time Slot
+DELETE http://localhost:9000/admin/time-slots/time_slot_789
