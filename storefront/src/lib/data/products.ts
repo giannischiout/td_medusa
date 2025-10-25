@@ -1,42 +1,28 @@
 "use server"
 
-import { sdk } from "@lib/config"
-import { sortProducts } from "@lib/util/sort-products"
 import { HttpTypes } from "@medusajs/types"
-import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
+import { sdk } from "lib/config"
+import { sortProducts } from "lib/util/sort-products"
+import { SortOptions } from "modules/store/components/refinement-list/sort-products"
 import { getAuthHeaders, getCacheOptions } from "./cookies"
-import { getRegion, retrieveRegion } from "./regions"
+import { getDefaultRegion } from "./regions"
 
 export const listProducts = async ({
   pageParam = 1,
   queryParams,
-  countryCode,
-  regionId,
 }: {
   pageParam?: number
   queryParams?: HttpTypes.FindParams & HttpTypes.StoreProductListParams
-  countryCode?: string
-  regionId?: string
 }): Promise<{
   response: { products: HttpTypes.StoreProduct[]; count: number }
   nextPage: number | null
   queryParams?: HttpTypes.FindParams & HttpTypes.StoreProductListParams
 }> => {
-  if (!countryCode && !regionId) {
-    throw new Error("Country code or region ID is required")
-  }
-
   const limit = queryParams?.limit || 12
   const _pageParam = Math.max(pageParam, 1)
   const offset = _pageParam === 1 ? 0 : (_pageParam - 1) * limit
 
-  let region: HttpTypes.StoreRegion | undefined | null
-
-  if (countryCode) {
-    region = await getRegion(countryCode)
-  } else {
-    region = await retrieveRegion(regionId!)
-  }
+  const region = await getDefaultRegion()
 
   if (!region) {
     return {

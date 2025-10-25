@@ -1,8 +1,8 @@
 "use server"
 
-import { sdk } from "@lib/config"
-import medusaError from "@lib/util/medusa-error"
 import { HttpTypes } from "@medusajs/types"
+import { sdk } from "lib/config"
+import medusaError from "lib/util/medusa-error"
 import { getCacheOptions } from "./cookies"
 
 export const listRegions = async () => {
@@ -35,32 +35,42 @@ export const retrieveRegion = async (id: string) => {
     .catch(medusaError)
 }
 
-const regionMap = new Map<string, HttpTypes.StoreRegion>()
+// Default region ID - you can set this to your preferred region
+const DEFAULT_REGION_ID =
+  process.env.NEXT_PUBLIC_DEFAULT_REGION_ID || "reg_01HZ9XQZQZQZQZQZQZQZQZQZQZ"
 
-export const getRegion = async (countryCode: string) => {
+let defaultRegion: HttpTypes.StoreRegion | null = null
+
+export const getDefaultRegion = async () => {
   try {
-    if (regionMap.has(countryCode)) {
-      return regionMap.get(countryCode)
+    if (defaultRegion) {
+      return defaultRegion
     }
 
+    // Try to get the default region by ID first
+    try {
+      defaultRegion = await retrieveRegion(DEFAULT_REGION_ID)
+      if (defaultRegion) {
+        return defaultRegion
+      }
+    } catch (e) {
+      // If specific region not found, get the first available region
+    }
+
+    // Fallback to first available region
     const regions = await listRegions()
-
-    if (!regions) {
-      return null
+    if (regions && regions.length > 0) {
+      defaultRegion = regions[0]
+      return defaultRegion
     }
 
-    regions.forEach((region) => {
-      region.countries?.forEach((c) => {
-        regionMap.set(c?.iso_2 ?? "", region)
-      })
-    })
-
-    const region = countryCode
-      ? regionMap.get(countryCode)
-      : regionMap.get("us")
-
-    return region
+    return null
   } catch (e: any) {
     return null
   }
+}
+
+// Keep the old function for backward compatibility, but it now returns the default region
+export const getRegion = async (countryCode?: string) => {
+  return getDefaultRegion()
 }
