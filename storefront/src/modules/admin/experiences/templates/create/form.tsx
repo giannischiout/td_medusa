@@ -1,6 +1,7 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
+import { useGetCategories } from "actions"
 import { Field, Form } from "components/hook-form"
 import { Button } from "components/ui/button"
 import {
@@ -11,6 +12,8 @@ import {
   CardTitle,
 } from "components/ui/card"
 import { Input } from "components/ui/input"
+import axiosInstance from "lib/axios"
+import { endpoints } from "lib/endpoints"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
@@ -42,6 +45,15 @@ const productSchema = z.object({
 type ProductFormData = z.infer<typeof productSchema>
 
 export default function ExperienceForm() {
+  // Fetch categories using the hook
+  const {
+    data: categories,
+    isLoading: categoriesLoading,
+    error: categoriesError,
+  } = useGetCategories()
+
+  console.log(categories)
+
   const methods = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
     defaultValues: {
@@ -62,11 +74,49 @@ export default function ExperienceForm() {
     formState: { errors, isSubmitting },
   } = methods
 
+  // Transform categories data for the select options
+  const categoryOptions =
+    categories && Array.isArray(categories)
+      ? categories.map((category: any) => ({
+          label: category.name || category.title,
+          value: category.id,
+        }))
+      : []
+
   const onSubmit = async (data: ProductFormData) => {
     try {
       console.log("Form data:", data)
-      // Here you would typically send the data to your API
-      // await createExperience(data)
+
+      // Call the API to create product with extension using axios
+      const response = await axiosInstance.post(
+        endpoints.productsWithExtension.create,
+        {
+          title: data.title,
+          description: data.description,
+          status: "published",
+          category_id: data.category,
+          variants: [
+            {
+              title: "default / default",
+              prices: [
+                {
+                  currency_code: "usd",
+                  amount: Math.round(parseFloat(data.price) * 100),
+                },
+              ],
+            },
+          ],
+          additional_data: {
+            duration: data.duration,
+            difficulty_level: data.difficulty,
+            max_participants: parseInt(data.maxParticipants),
+            location: data.location,
+            tags: data.tags || "",
+          },
+        }
+      )
+
+      console.log("Product created:", response.data)
 
       // Reset form after successful submission
       reset()
@@ -103,10 +153,18 @@ export default function ExperienceForm() {
           {/* Category */}
           <Field.select
             name="category"
-            placeholder="Select category"
-            options={[{ label: "test", value: "test" }]}
+            placeholder={
+              categoriesLoading ? "Loading categories..." : "Select category"
+            }
+            options={categoryOptions}
             label="Category"
+            disabled={categoriesLoading || !!categoriesError}
           />
+          {categoriesError && (
+            <p className="text-sm text-red-500">
+              Error loading categories: {categoriesError.message}
+            </p>
+          )}
         </CardContent>
       </Card>
 
